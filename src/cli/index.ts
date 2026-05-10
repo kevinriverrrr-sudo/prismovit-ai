@@ -14,7 +14,7 @@ import { AgentLoop } from '../agent/index.js';
 import { WebServer } from '../web/index.js';
 import { existsSync, mkdirSync } from 'fs';
 
-const VERSION = '1.0.0';
+const VERSION = '1.1.0';
 
 // ==================== Print Mode ====================
 

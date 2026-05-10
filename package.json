@@ -1,6 +1,6 @@
 {
   "name": "prismovit-ai",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Prismovit AI — The ultimate multi-provider AI coding agent. Interactive TUI, web interface, MCP support, 30+ LLM providers. Built with TypeScript, inspired by OpenCode + Pi + OpenClaude.",
   "type": "module",
   "main": "dist/index.js",

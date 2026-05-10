@@ -5,7 +5,7 @@
 
 // ==================== Provider Types ====================
 
-export type ProviderName = 'openai' | 'anthropic' | 'gemini' | 'ollama' | 'openrouter' | 'deepseek' | 'groq' | 'custom';
+export type ProviderName = 'openai' | 'anthropic' | 'gemini' | 'ollama' | 'openrouter' | 'deepseek' | 'groq' | 'xai' | 'copilot' | 'bedrock' | 'custom';
 
 export interface ProviderConfig {
   name: ProviderName;

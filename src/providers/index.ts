@@ -611,6 +611,9 @@ export class ProviderRegistry {
     this.registerOpenAICompatible('deepseek', 'DeepSeek');
     this.registerOpenAICompatible('groq', 'Groq');
     this.registerOpenAICompatible('gemini', 'Gemini');
+    this.registerOpenAICompatible('xai', 'xAI');
+    this.registerOpenAICompatible('copilot', 'Copilot');
+    this.registerOpenAICompatible('bedrock', 'Bedrock');
     this.registerOpenAICompatible('custom', 'Custom');
   }
 

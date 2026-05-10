@@ -116,10 +116,14 @@ const DEFAULT_PROVIDERS: Record<ProviderName, { displayName: string; baseUrl?: s
     displayName: 'OpenAI',
     baseUrl: 'https://api.openai.com/v1',
     models: [
+      { id: 'gpt-4.1', name: 'GPT 4.1', maxTokens: 32768, contextWindow: 1047576 },
+      { id: 'gpt-4.1-mini', name: 'GPT 4.1 Mini', maxTokens: 16384, contextWindow: 1047576 },
+      { id: 'gpt-4.1-nano', name: 'GPT 4.1 Nano', maxTokens: 16384, contextWindow: 1047576 },
       { id: 'gpt-4o', name: 'GPT-4o', maxTokens: 16384, contextWindow: 128000 },
       { id: 'gpt-4o-mini', name: 'GPT-4o Mini', maxTokens: 16384, contextWindow: 128000 },
-      { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', maxTokens: 4096, contextWindow: 128000 },
-      { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', maxTokens: 4096, contextWindow: 16385 },
+      { id: 'o3', name: 'O3', maxTokens: 100000, contextWindow: 200000 },
+      { id: 'o3-mini', name: 'O3 Mini', maxTokens: 65536, contextWindow: 200000 },
+      { id: 'o4-mini', name: 'O4 Mini', maxTokens: 100000, contextWindow: 200000 },
     ],
   },
   anthropic: {
@@ -130,6 +134,7 @@ const DEFAULT_PROVIDERS: Record<ProviderName, { displayName: string; baseUrl?: s
       { id: 'claude-opus-4-20250514', name: 'Claude Opus 4', maxTokens: 16384, contextWindow: 200000 },
       { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', maxTokens: 8192, contextWindow: 200000 },
       { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', maxTokens: 8192, contextWindow: 200000 },
+      { id: 'claude-3-opus-20240229', name: 'Claude 3 Opus', maxTokens: 4096, contextWindow: 200000 },
     ],
   },
   gemini: {
@@ -156,9 +161,11 @@ const DEFAULT_PROVIDERS: Record<ProviderName, { displayName: string; baseUrl?: s
     displayName: 'OpenRouter',
     baseUrl: 'https://openrouter.ai/api/v1',
     models: [
-      { id: 'anthropic/claude-sonnet-4', name: 'Claude Sonnet 4 (via OpenRouter)', maxTokens: 16384, contextWindow: 200000 },
-      { id: 'openai/gpt-4o', name: 'GPT-4o (via OpenRouter)', maxTokens: 16384, contextWindow: 128000 },
-      { id: 'google/gemini-2.5-pro-preview', name: 'Gemini 2.5 Pro (via OpenRouter)', maxTokens: 65536, contextWindow: 1000000 },
+      { id: 'anthropic/claude-sonnet-4', name: 'Claude Sonnet 4', maxTokens: 16384, contextWindow: 200000 },
+      { id: 'openai/gpt-4.1', name: 'GPT 4.1', maxTokens: 32768, contextWindow: 1047576 },
+      { id: 'google/gemini-2.5-pro-preview', name: 'Gemini 2.5 Pro', maxTokens: 65536, contextWindow: 1000000 },
+      { id: 'deepseek/deepseek-r1', name: 'DeepSeek R1', maxTokens: 8192, contextWindow: 65536 },
+      { id: 'deepseek/deepseek-r1-free', name: 'DeepSeek R1 Free', maxTokens: 8192, contextWindow: 65536 },
     ],
   },
   deepseek: {
@@ -173,8 +180,34 @@ const DEFAULT_PROVIDERS: Record<ProviderName, { displayName: string; baseUrl?: s
     displayName: 'Groq',
     baseUrl: 'https://api.groq.com/openai/v1',
     models: [
+      { id: 'qwen-qwq-32b', name: 'Qwen QwQ 32B', maxTokens: 32768, contextWindow: 131072 },
       { id: 'llama-3.3-70b-versatile', name: 'LLaMA 3.3 70B', maxTokens: 32768, contextWindow: 131072 },
       { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B', maxTokens: 32768, contextWindow: 32768 },
+    ],
+  },
+  xai: {
+    displayName: 'xAI',
+    baseUrl: 'https://api.x.ai/v1',
+    models: [
+      { id: 'grok-3-beta', name: 'Grok 3 Beta', maxTokens: 16384, contextWindow: 131072 },
+      { id: 'grok-3-mini-beta', name: 'Grok 3 Mini Beta', maxTokens: 16384, contextWindow: 131072 },
+    ],
+  },
+  copilot: {
+    displayName: 'GitHub Copilot',
+    baseUrl: 'https://api.githubcopilot.com',
+    models: [
+      { id: 'gpt-4o', name: 'GPT-4o (Copilot)', maxTokens: 16384, contextWindow: 128000 },
+      { id: 'claude-3.5-sonnet', name: 'Claude 3.5 Sonnet (Copilot)', maxTokens: 8192, contextWindow: 200000 },
+      { id: 'gpt-4.1', name: 'GPT 4.1 (Copilot)', maxTokens: 32768, contextWindow: 1047576 },
+    ],
+  },
+  bedrock: {
+    displayName: 'AWS Bedrock',
+    baseUrl: 'https://bedrock-runtime.us-east-1.amazonaws.com',
+    models: [
+      { id: 'anthropic.claude-sonnet-4-20250514-v1:0', name: 'Claude Sonnet 4 (Bedrock)', maxTokens: 16384, contextWindow: 200000 },
+      { id: 'anthropic.claude-3-5-sonnet-20241022-v2:0', name: 'Claude 3.5 Sonnet (Bedrock)', maxTokens: 8192, contextWindow: 200000 },
     ],
   },
   custom: {
@@ -268,6 +301,9 @@ export class ConfigManager {
       openrouter: ['OPENROUTER_API_KEY', 'PRISM_OPENROUTER_KEY'],
       deepseek: ['DEEPSEEK_API_KEY', 'PRISM_DEEPSEEK_KEY'],
       groq: ['GROQ_API_KEY', 'PRISM_GROQ_KEY'],
+      xai: ['XAI_API_KEY', 'PRISM_XAI_KEY'],
+      copilot: ['GITHUB_TOKEN', 'PRISM_COPILOT_KEY'],
+      bedrock: ['AWS_ACCESS_KEY_ID', 'PRISM_BEDROCK_KEY'],
       custom: ['CUSTOM_API_KEY', 'PRISM_CUSTOM_KEY'],
     };
 
@@ -290,6 +326,9 @@ export class ConfigManager {
       openrouter: 'OPENROUTER_BASE_URL',
       deepseek: 'DEEPSEEK_BASE_URL',
       groq: 'GROQ_BASE_URL',
+      xai: 'XAI_BASE_URL',
+      copilot: 'COPILOT_BASE_URL',
+      bedrock: 'BEDROCK_BASE_URL',
       custom: 'CUSTOM_BASE_URL',
     };
 
