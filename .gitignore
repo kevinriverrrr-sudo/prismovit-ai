@@ -40,3 +40,4 @@ coverage/
 
 # Build
 .turbo/
+deploy_remote.py
