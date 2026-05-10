@@ -1,0 +1,85 @@
+{
+  "name": "prismovit-ai",
+  "version": "1.0.0",
+  "description": "Prismovit AI — The ultimate multi-provider AI coding agent. Interactive TUI, web interface, MCP support, 30+ LLM providers. Built with TypeScript, inspired by OpenCode + Pi + OpenClaude.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "prism": "./bin/prism.js"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./core": "./dist/core/index.js",
+    "./tui": "./dist/tui/App.js",
+    "./web": "./dist/web/server.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "prism": "node bin/prism.js",
+    "lint": "eslint src/",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "os": ["win32", "darwin", "linux", "android"],
+  "cpu": ["x64", "arm64", "arm"],
+  "keywords": [
+    "ai",
+    "cli",
+    "coding-agent",
+    "llm",
+    "mcp",
+    "opencode",
+    "openclaude",
+    "terminal",
+    "tui",
+    "chat",
+    "openai",
+    "anthropic",
+    "claude",
+    "gemini",
+    "ollama"
+  ],
+  "author": "Prismovit Team",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prismovit/prismovit-ai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/prismovit/prismovit-ai/issues"
+  },
+  "homepage": "https://github.com/prismovit/prismovit-ai#readme",
+  "license": "MIT",
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-reconciler": "^0.33.0",
+    "ink": "^5.1.0",
+    "ink-text-input": "^6.0.0",
+    "ink-spinner": "^5.0.0",
+    "ink-select-input": "^6.0.0",
+    "chalk": "^5.4.1",
+    "commander": "^13.1.0",
+    "zod": "^3.24.2",
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "openai": "^4.87.0",
+    "@anthropic-ai/sdk": "^0.39.0",
+    "ora": "^8.2.0",
+    "wrap-ansi": "^9.0.0",
+    "marked": "^15.0.7",
+    "diff": "^7.0.0",
+    "glob": "^11.0.1",
+    "dotenv": "^16.4.7",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18",
+    "@types/node": "^22.13.5",
+    "@types/diff": "^7.0.0",
+    "@types/ws": "^8.18.0",
+    "typescript": "^5.7.3"
+  }
+}
