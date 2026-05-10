@@ -5,8 +5,6 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
-import React from 'react';
-import { render } from 'ink';
 import { ConfigManager } from '../config/index.js';
 import { ProviderRegistry } from '../providers/index.js';
 import { ToolRegistry } from '../tools/index.js';
@@ -59,6 +57,8 @@ async function startInteractiveMode(
   config: ConfigManager,
 ): Promise<void> {
   try {
+    const React = await import('react');
+    const { render } = await import('ink');
     const { PrismTUI, getThemeColors } = await import('../tui/App.js');
 
     const themeColors = getThemeColors(config.getConfig());
