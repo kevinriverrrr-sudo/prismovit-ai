@@ -3,6 +3,7 @@
  * Detects the current platform including Termux on Android.
  */
 
+import { release as osRelease } from 'os';
 import type { Platform, PlatformInfo } from '../types/index.js';
 
 /**
@@ -33,8 +34,7 @@ export function isTermux(): boolean {
 export function isWSL(): boolean {
   try {
     if (process.env.WSL_DISTRO_NAME) return true;
-    const release = require('os').release?.() || process.version;
-    if (release.toLowerCase().includes('microsoft')) return true;
+    if (osRelease().toLowerCase().includes('microsoft')) return true;
   } catch {
     // ignore
   }
@@ -48,7 +48,6 @@ export function getPlatformInfo(): PlatformInfo {
   const platform = detectPlatform();
   const termux = isTermux();
   const wsl = isWSL();
-  const os = await_import_os();
   const homeDir = process.env.HOME || process.env.USERPROFILE || '/tmp';
 
   // Config directory
@@ -87,10 +86,6 @@ function detectPlatform(): Platform {
   if (p === 'win32') return 'windows';
   if (p === 'darwin') return 'macos';
   return 'linux';
-}
-
-function await_import_os() {
-  return { release: process.version };
 }
 
 /**

@@ -3,11 +3,10 @@
  * Main command-line interface using Commander.js.
  */
 
-import { createRequire } from 'module';
 import { Command } from 'commander';
 import chalk from 'chalk';
 import React from 'react';
-import { render, Box, Text, useApp, useInput } from 'ink';
+import { render } from 'ink';
 import { ConfigManager } from '../config/index.js';
 import { ProviderRegistry } from '../providers/index.js';
 import { ToolRegistry } from '../tools/index.js';
@@ -18,107 +17,6 @@ import { WebServer } from '../web/index.js';
 import { existsSync, mkdirSync } from 'fs';
 
 const VERSION = '1.0.0';
-
-const program = new Command();
-
-program
-  .name('prism')
-  .description('◆ PRISM — Multi-provider AI Coding Agent CLI')
-  .version(VERSION, '-v, --version', 'Show version')
-  .helpOption('-h, --help', 'Show help')
-  .argument('[prompt...]', 'Message to send')
-  .option('-p, --provider <name>', 'LLM provider')
-  .option('-m, --model <model>', 'Model to use')
-  .option('--print', 'Non-interactive: print response and exit')
-  .option('--web', 'Start web interface only')
-  .option('--web-port <port>', 'Web interface port', '3141')
-  .option('--no-mcp', 'Disable MCP servers')
-  .option('-c, --continue', 'Continue last session')
-  .option('-s, --session <id>', 'Resume specific session')
-  .option('--theme <name>', 'Theme (dark, light, midnight, nord, tokyo)')
-  .action(async (promptArgs: string[], opts: Record<string, unknown>) => {
-    const config = new ConfigManager();
-
-    // Ensure data directory exists
-    if (!existsSync(config.getDataDir())) {
-      mkdirSync(config.getDataDir(), { recursive: true });
-    }
-
-    // Apply options
-    if (opts.provider) {
-      config.set('defaultProvider', opts.provider as any);
-    }
-    if (opts.model) {
-      config.set('defaultModel', opts.model as string);
-    }
-    if (opts.theme) {
-      const themes = config.getAllThemes();
-      if (themes[opts.theme as string]) {
-        config.set('theme', themes[opts.theme as string]);
-      }
-    }
-
-    // ===== Web mode =====
-    if (opts.web) {
-      await startWebMode(config, parseInt(opts.webPort as string));
-      return;
-    }
-
-    // Initialize core
-    const providerRegistry = new ProviderRegistry(config);
-    const toolRegistry = new ToolRegistry();
-    const sessionManager = new SessionManager(config.getDataDir());
-
-    // MCP
-    let mcpManager: MCPManager | null = null;
-    if (opts.mcp !== false) {
-      const mcpConfigs = config.get('mcpServers');
-      if (Object.keys(mcpConfigs).length > 0) {
-        mcpManager = new MCPManager(mcpConfigs);
-        try {
-          await mcpManager.connectAll();
-        } catch {
-          // MCP connection failures are non-fatal
-        }
-      }
-    }
-
-    const agent = new AgentLoop(providerRegistry, toolRegistry, sessionManager, config, mcpManager || undefined);
-
-    // Session management
-    if (opts.session) {
-      const session = await sessionManager.getSession(opts.session as string);
-      if (session) sessionManager.setCurrentSession(session);
-    } else if (opts.continue) {
-      const sessions = await sessionManager.listSessions();
-      if (sessions.length > 0) {
-        const lastSession = await sessionManager.getSession(sessions[0].id);
-        if (lastSession) sessionManager.setCurrentSession(lastSession);
-      }
-    } else {
-      sessionManager.createSession();
-    }
-
-    // ===== Print mode =====
-    const prompt = (promptArgs || []).join(' ');
-
-    if (opts.print || prompt) {
-      if (!prompt) {
-        console.error('Error: provide a message or use interactive mode');
-        process.exit(1);
-      }
-      await printMode(agent, prompt);
-      if (mcpManager) await mcpManager.disconnectAll();
-      return;
-    }
-
-    // ===== Interactive TUI / REPL mode =====
-    await startInteractiveMode(agent, sessionManager, providerRegistry, config);
-
-    if (mcpManager) {
-      await mcpManager.disconnectAll();
-    }
-  });
 
 // ==================== Print Mode ====================
 
@@ -165,7 +63,7 @@ async function startInteractiveMode(
 
     const themeColors = getThemeColors(config.getConfig());
 
-    render(
+    const { waitUntilExit } = render(
       React.createElement(PrismTUI, {
         agent,
         sessionManager,
@@ -174,6 +72,8 @@ async function startInteractiveMode(
         colors: themeColors,
       }),
     );
+
+    await waitUntilExit();
   } catch (error: unknown) {
     console.error('TUI failed:', (error as Error).message);
     console.error('Falling back to REPL mode...\n');
@@ -317,6 +217,109 @@ async function startWebMode(config: ConfigManager, port: number): Promise<void> 
   await new Promise(() => {});
 }
 
-// ==================== Run ====================
+// ==================== Main CLI (exported) ====================
 
-program.parse(process.argv);
+export async function runCLI(): Promise<void> {
+  const program = new Command();
+
+  program
+    .name('prism')
+    .description('◆ PRISM — Multi-provider AI Coding Agent CLI')
+    .version(VERSION, '-v, --version', 'Show version')
+    .helpOption('-h, --help', 'Show help')
+    .argument('[prompt...]', 'Message to send')
+    .option('-p, --provider <name>', 'LLM provider')
+    .option('-m, --model <model>', 'Model to use')
+    .option('--print', 'Non-interactive: print response and exit')
+    .option('--web', 'Start web interface only')
+    .option('--web-port <port>', 'Web interface port', '3141')
+    .option('--no-mcp', 'Disable MCP servers')
+    .option('-c, --continue', 'Continue last session')
+    .option('-s, --session <id>', 'Resume specific session')
+    .option('--theme <name>', 'Theme (dark, light, midnight, nord, tokyo)')
+    .action(async (promptArgs: string[], opts: Record<string, unknown>) => {
+      const config = new ConfigManager();
+
+      // Ensure data directory exists
+      if (!existsSync(config.getDataDir())) {
+        mkdirSync(config.getDataDir(), { recursive: true });
+      }
+
+      // Apply options
+      if (opts.provider) {
+        config.set('defaultProvider', opts.provider as any);
+      }
+      if (opts.model) {
+        config.set('defaultModel', opts.model as string);
+      }
+      if (opts.theme) {
+        const themes = config.getAllThemes();
+        if (themes[opts.theme as string]) {
+          config.set('theme', themes[opts.theme as string]);
+        }
+      }
+
+      // ===== Web mode =====
+      if (opts.web) {
+        await startWebMode(config, parseInt(opts.webPort as string));
+        return;
+      }
+
+      // Initialize core
+      const providerRegistry = new ProviderRegistry(config);
+      const toolRegistry = new ToolRegistry();
+      const sessionManager = new SessionManager(config.getDataDir());
+
+      // MCP
+      let mcpManager: MCPManager | null = null;
+      if (opts.mcp !== false) {
+        const mcpConfigs = config.get('mcpServers');
+        if (Object.keys(mcpConfigs).length > 0) {
+          mcpManager = new MCPManager(mcpConfigs);
+          try {
+            await mcpManager.connectAll();
+          } catch {
+            // MCP connection failures are non-fatal
+          }
+        }
+      }
+
+      const agent = new AgentLoop(providerRegistry, toolRegistry, sessionManager, config, mcpManager || undefined);
+
+      // Session management
+      if (opts.session) {
+        const session = await sessionManager.getSession(opts.session as string);
+        if (session) sessionManager.setCurrentSession(session);
+      } else if (opts.continue) {
+        const sessions = await sessionManager.listSessions();
+        if (sessions.length > 0) {
+          const lastSession = await sessionManager.getSession(sessions[0].id);
+          if (lastSession) sessionManager.setCurrentSession(lastSession);
+        }
+      } else {
+        sessionManager.createSession();
+      }
+
+      // ===== Print mode =====
+      const prompt = (promptArgs || []).join(' ');
+
+      if (opts.print || prompt) {
+        if (!prompt) {
+          console.error('Error: provide a message or use interactive mode');
+          process.exit(1);
+        }
+        await printMode(agent, prompt);
+        if (mcpManager) await mcpManager.disconnectAll();
+        return;
+      }
+
+      // ===== Interactive TUI / REPL mode =====
+      await startInteractiveMode(agent, sessionManager, providerRegistry, config);
+
+      if (mcpManager) {
+        await mcpManager.disconnectAll();
+      }
+    });
+
+  await program.parseAsync(process.argv);
+}

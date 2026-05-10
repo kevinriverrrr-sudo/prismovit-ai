@@ -1,0 +1,33 @@
+# Source
+src/
+scripts/
+
+# Development
+.git/
+.gitignore
+.github/
+deploy_remote.py
+
+# Docs (we have README.md in the package already)
+docs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+coverage/
+
+# Misc
+*.log
+npm-debug.log*

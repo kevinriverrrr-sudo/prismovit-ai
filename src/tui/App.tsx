@@ -1,12 +1,11 @@
 /**
  * PRISM TUI — Terminal User Interface
  * Beautiful React/Ink-based terminal chat interface.
- * Input handling is done ONLY by TextInput — no useInput in parent to avoid doubling.
+ * Input handling uses useInput directly — no ink-text-input to avoid character doubling.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Box, Text, useApp, useInput } from 'ink';
-import TextInput from 'ink-text-input';
+import { Box, Text, useApp, useInput, useStdout } from 'ink';
 import Spinner from 'ink-spinner';
 import chalk from 'chalk';
 import type { Message, AgentEvent, ProviderName, PrismConfig } from '../types/index.js';
@@ -93,7 +92,6 @@ function MessageBubble({ message, colors, isStreaming }: MessageBubbleProps) {
 }
 
 // ==================== Help Panel ====================
-// This is the ONLY component that uses useInput — to capture Escape/q when visible
 
 interface HelpPanelProps {
   visible: boolean;
@@ -102,7 +100,6 @@ interface HelpPanelProps {
 }
 
 function HelpPanel({ visible, onClose, colors }: HelpPanelProps) {
-  // isActive=false prevents this from capturing input when hidden
   useInput((_input, key) => {
     if (key.escape) {
       onClose();
@@ -261,7 +258,7 @@ export function PrismTUI({ agent, sessionManager, providerRegistry, config, colo
     return () => { unsubscribe(); };
   }, [agent]);
 
-  // Handle submit from TextInput
+  // Handle submit
   const handleSubmit = useCallback(async (text: string) => {
     if (!text.trim()) return;
 
@@ -397,10 +394,71 @@ export function PrismTUI({ agent, sessionManager, providerRegistry, config, colo
     }]);
   };
 
+  // ==================== Custom Input Handling ====================
+  // Uses useInput directly to avoid character doubling bugs from ink-text-input
+
+  useInput((input, key) => {
+    // When help panel is open, only handle Escape (handled by HelpPanel's useInput)
+    if (showHelp) return;
+
+    // Don't process input while streaming
+    if (isStreaming && !key.escape) return;
+
+    if (key.return) {
+      // Submit on Enter
+      const text = inputValue;
+      setInputValue('');
+      handleSubmit(text);
+      return;
+    }
+
+    if (key.escape) {
+      // Clear input on Escape
+      setInputValue('');
+      return;
+    }
+
+    if (key.backspace || key.delete) {
+      // Delete last character (handle Unicode properly)
+      setInputValue((prev) => {
+        const chars = [...prev]; // spread handles multi-byte Unicode
+        chars.pop();
+        return chars.join('');
+      });
+      return;
+    }
+
+    if (key.ctrl && input === 'c') {
+      if (isStreaming) {
+        agent.stop();
+        setIsStreaming(false);
+      } else {
+        agent.stop();
+        exit();
+      }
+      return;
+    }
+
+    // Handle Ctrl+U (clear line)
+    if (key.ctrl && input === 'u') {
+      setInputValue('');
+      return;
+    }
+
+    // Regular character input — only accept printable characters
+    // Skip control characters and special keys
+    if (input && !key.tab && !key.shift && !key.meta && !key.ctrl && !key.return && !key.escape && !key.backspace && !key.delete) {
+      setInputValue((prev) => prev + input);
+    }
+  });
+
   // Helper: provider/model label
   const providerLabel = currentSession
     ? `${currentSession.provider}/${currentSession.model}`
     : `${config.defaultProvider}/${config.defaultModel}`;
+
+  // Truncate display of input for very long strings
+  const displayInput = inputValue.length > 100 ? inputValue.slice(-100) : inputValue;
 
   return (
     <Box flexDirection="column">
@@ -435,15 +493,12 @@ export function PrismTUI({ agent, sessionManager, providerRegistry, config, colo
         )}
       </Box>
 
-      {/* Input */}
+      {/* Input — custom rendering, no ink-text-input */}
       <Box paddingY={0}>
         <Box borderStyle="round" borderColor={colors.primaryHex} paddingX={1}>
           <Text color={colors.primaryHex}>{'❯ '}</Text>
-          <TextInput
-            value={inputValue}
-            onChange={setInputValue}
-            onSubmit={handleSubmit}
-          />
+          <Text>{displayInput}</Text>
+          <Text color={colors.mutedHex}>{inputValue.length > 0 ? '▎' : ''}</Text>
         </Box>
       </Box>
 

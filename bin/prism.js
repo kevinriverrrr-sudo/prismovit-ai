@@ -9,11 +9,12 @@
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const pkgRoot = resolve(__dirname, '..');
 
-// Dynamic import for ESM compatibility
 async function main() {
-  const { runCLI } = await import('../dist/cli/index.js');
+  const { runCLI } = await import(resolve(pkgRoot, 'dist', 'cli', 'index.js'));
   await runCLI();
 }
 
